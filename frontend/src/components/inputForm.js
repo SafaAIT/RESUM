@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 
-function InputForm({ setSummary, setAudioUrl, setChatEnabled }) {
+function InputForm({ setSummary, setAudioUrl, setChatEnabled, setArticles }) {
   const [selectedOption, setSelectedOption] = useState("text");
   const [textInput, setTextInput] = useState("");
   const [urlInput, setUrlInput] = useState("");
@@ -10,7 +10,6 @@ function InputForm({ setSummary, setAudioUrl, setChatEnabled }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Préparer le body en fonction du choix
     const body = {
       choice: selectedOption,
       text_input: "",
@@ -24,7 +23,6 @@ function InputForm({ setSummary, setAudioUrl, setChatEnabled }) {
     else if (selectedOption === "url") body.url_input = urlInput;
     else if (selectedOption === "rss") body.rss_input = rssInput;
 
-    // Pour le fichier, on va envoyer en base64 pour simplifier l’exemple
     if (selectedOption === "file" && fileInput) {
       const base64File = await toBase64(fileInput);
       body.file_data = base64File;
@@ -41,21 +39,26 @@ function InputForm({ setSummary, setAudioUrl, setChatEnabled }) {
       const data = await response.json();
 
       if (response.ok && data.status === "success") {
-        setSummary(data.summary || "❌ Aucun résumé reçu.");
+        if (data.articles) {
+          setArticles(data.articles); // RSS : liste d'articles
+        } else if (data.summary) {
+          setArticles([{ title: "Résumé", summary: data.summary }]); // Texte / URL / Fichier
+        }
+
         if (data.audio_file) {
           setAudioUrl(`http://localhost:5000/audio`);
         }
+
         setChatEnabled(true);
       } else {
-        setSummary("❌ Une erreur est survenue côté serveur.");
+        setArticles([{ title: "Erreur", summary: "❌ Une erreur est survenue côté serveur." }]);
       }
     } catch (error) {
       console.error("Erreur de requête :", error);
-      setSummary("❌ Une erreur est survenue lors de la soumission.");
+      setArticles([{ title: "Erreur", summary: "❌ Une erreur est survenue lors de la soumission." }]);
     }
   };
 
-  // Utilitaire pour convertir fichier en base64
   const toBase64 = (file) =>
     new Promise((resolve, reject) => {
       const reader = new FileReader();

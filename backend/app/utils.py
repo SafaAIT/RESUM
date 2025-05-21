@@ -50,7 +50,17 @@ def fetch_article_from_url(url):
 
 def fetch_articles_from_rss(url):
     feed = feedparser.parse(url)
-    return [clean_summary(entry.summary) for entry in feed.entries]
+    articles = []
+    for entry in feed.entries[:5]:
+        content = clean_summary(entry.summary)
+        summary = summarize_text(content)
+        articles.append({
+            "title": entry.title,
+            "summary": summary,
+            "content": content
+        })
+    return articles
+
 
 def text_to_speech(text):
     audio_dir = "audio"
@@ -65,20 +75,29 @@ def process_input(choice, text_input, file_path, url_input, rss_input):
 
     print(f"process_input appelé avec choice={choice}")
 
+    articles = None  # Valeur par défaut
+
     if choice == "text":
         content = text_input
-    elif choice == "pdf":
+
+    elif choice == "pdf" or choice == "file":
         content = load_pdf(file_path)
+
     elif choice == "url":
         content = fetch_article_from_url(url_input)
+
     elif choice == "rss":
-        summaries = fetch_articles_from_rss(rss_input)
-        content = "\n\n".join(summaries)
+        articles = fetch_articles_from_rss(rss_input)
+        summary = "\n\n".join([f"📰 {a['title']}:\n{a['summary']}" for a in articles])
+        content = "\n\n".join([a['content'] for a in articles])
+
     else:
         print("Choice invalide")
         return "", None, None, None
 
-    summary = summarize_text(content)
+    if choice != "rss":
+        summary = summarize_text(content)
+
     print("Résumé généré :", summary)
 
     splitter = RecursiveCharacterTextSplitter(chunk_size=500, chunk_overlap=50)

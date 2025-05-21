@@ -1,8 +1,7 @@
 from flask import Blueprint, request, jsonify, send_file
 import os
-from app.utils import process_input, rag_chain
 import base64
-
+from app.utils import process_input, rag_chain
 
 routes = Blueprint("routes", __name__)
 
@@ -20,7 +19,7 @@ def process():
         file_path = None
         if choice == "file" and file_data and file_name:
             # Décoder le base64
-            header, encoded = file_data.split(",", 1)  # supprimer 'data:*/*;base64,'
+            header, encoded = file_data.split(",", 1)
             file_bytes = base64.b64decode(encoded)
 
             # Sauvegarder temporairement le fichier
@@ -38,24 +37,28 @@ def process():
             rss_input=rss_input
         )
 
-        # Nettoyage fichier temporaire si besoin
         if file_path and os.path.exists(file_path):
             os.remove(file_path)
 
-        return jsonify({
+        response = {
+            "status": "success",
             "summary": summary,
-            "audio_file": audio_path,
-            "status": "success"
-        })
+            "audio_file": audio_path
+        }
+
+        return jsonify(response)  
 
     except Exception as e:
         print(f"Erreur dans /process : {e}")
         return jsonify({"error": str(e), "status": "error"}), 500
 
+
 @routes.route("/chat", methods=["POST"])
 def chat():
-    question = request.json.get("question")
+    data = request.get_json()
+    print("Données reçues dans /chat :", data)  # Ajoute ce log
 
+    question = data.get("question")
     if not rag_chain:
         return jsonify({"error": "No context loaded. Please process a document first."}), 400
 
@@ -65,16 +68,12 @@ def chat():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-import os
-from flask import send_file, jsonify
-
 @routes.route("/audio", methods=["GET"])
 def download_audio():
-
-    base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))  # backend/
+    base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
     audio_path = os.path.join(base_dir, "audio", "summary_audio.mp3")
 
     if not os.path.exists(audio_path):
         return jsonify({"error": "Audio file not found"}), 404
-    
+
     return send_file(audio_path, mimetype="audio/mpeg", as_attachment=False)
