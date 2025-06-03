@@ -6,6 +6,7 @@ function InputForm({ setSummary, setAudioUrl, setChatEnabled, setArticles }) {
   const [urlInput, setUrlInput] = useState("");
   const [rssInput, setRssInput] = useState("");
   const [fileInput, setFileInput] = useState(null);
+  const [summaryLevel, setSummaryLevel] = useState("medium");
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -17,6 +18,7 @@ function InputForm({ setSummary, setAudioUrl, setChatEnabled, setArticles }) {
       rss_input: "",
       file_data: null,
       file_name: null,
+      summary_level: summaryLevel,
     };
 
     if (selectedOption === "text") body.text_input = textInput;
@@ -150,6 +152,14 @@ function InputForm({ setSummary, setAudioUrl, setChatEnabled, setArticles }) {
           required
         />
       )}
+       <div>
+        <label>Niveau de résumé : </label>
+        <select value={summaryLevel} onChange={(e) => setSummaryLevel(e.target.value)}>
+          <option value="short">Court</option>
+          <option value="medium">Moyen</option>
+          <option value="long">Long</option>
+        </select>
+      </div>
 
       <br />
       <button type="submit">Envoyer</button>

@@ -1,7 +1,9 @@
 from flask import Blueprint, request, jsonify, send_file
 import os
 import base64
-from app.utils import process_input, rag_chain
+import app.utils as utils
+from app import utils
+
 
 routes = Blueprint("routes", __name__)
 
@@ -15,6 +17,8 @@ def process():
         rss_input = data.get("rss_input", "")
         file_data = data.get("file_data")
         file_name = data.get("file_name")
+        summary_level = data.get("summary_level", "medium")
+
 
         file_path = None
         if choice == "file" and file_data and file_name:
@@ -29,12 +33,14 @@ def process():
             with open(file_path, "wb") as f:
                 f.write(file_bytes)
 
-        summary, rag, content, audio_path = process_input(
+        summary, rag, content, audio_path = utils.process_input(
             choice=choice,
             text_input=text_input,
             file_path=file_path,
             url_input=url_input,
-            rss_input=rss_input
+            rss_input=rss_input,
+            summary_level=summary_level
+
         )
 
         if file_path and os.path.exists(file_path):
@@ -53,21 +59,28 @@ def process():
         return jsonify({"error": str(e), "status": "error"}), 500
 
 
+from flask import request, jsonify
+from app import utils  # importer utils pour accéder à rag_chain
+
 @routes.route("/chat", methods=["POST"])
 def chat():
-    data = request.get_json()
-    print("Données reçues dans /chat :", data)  # Ajoute ce log
+    question = request.json.get("question")
+    print("Données reçues dans /chat :", request.json)
 
-    question = data.get("question")
-    if not rag_chain:
+    if not utils.rag_chain:
         return jsonify({"error": "No context loaded. Please process a document first."}), 400
 
     try:
-        response = rag_chain.run(question)
-        return jsonify({"answer": response})
+        response = utils.rag_chain.invoke({"query": question})  
+        answer = response.get("result", response)
+        return jsonify({"answer": answer})
     except Exception as e:
+        print("Erreur dans /chat :", e)
+        import traceback
+        traceback.print_exc()
         return jsonify({"error": str(e)}), 500
 
+ 
 @routes.route("/audio", methods=["GET"])
 def download_audio():
     base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))

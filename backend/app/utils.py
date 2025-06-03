@@ -1,4 +1,3 @@
-# app/utils.py
 
 import re
 import os
@@ -31,10 +30,31 @@ def clean_summary(summary):
     soup = BeautifulSoup(summary, "html.parser")
     return soup.get_text()
 
-def summarize_text(text):
+def summarize_text(text, level="medium"):
     text = clean_text(text)
     text = truncate_text(text)
-    summary = summarizer(text, max_length=200, min_length=50, max_new_tokens=150, do_sample=False)
+
+    if level == "short":
+        max_len = 80
+        min_len = 30
+        max_new = 60
+    elif level == "long":
+        max_len = 500
+        min_len = 150
+        max_new = 300
+    else:  # medium
+        max_len = 200
+        min_len = 50
+        max_new = 150
+
+    summary = summarizer(
+        text,
+        max_length=max_len,
+        min_length=min_len,
+        max_new_tokens=max_new,
+        do_sample=False
+    )
+
     return summary[0]["summary_text"]
 
 def load_pdf(file_path):
@@ -48,12 +68,12 @@ def fetch_article_from_url(url):
     article.parse()
     return article.text
 
-def fetch_articles_from_rss(url):
+def fetch_articles_from_rss(url, level="medium"):
     feed = feedparser.parse(url)
     articles = []
     for entry in feed.entries[:5]:
         content = clean_summary(entry.summary)
-        summary = summarize_text(content)
+        summary = summarize_text(content, level=level)
         articles.append({
             "title": entry.title,
             "summary": summary,
@@ -70,7 +90,7 @@ def text_to_speech(text):
     print(f"Audio généré à : {audio_path}")
     return audio_path
 
-def process_input(choice, text_input, file_path, url_input, rss_input):
+def process_input(choice, text_input, file_path, url_input, rss_input, summary_level="medium"):
     global rag_chain
 
     print(f"process_input appelé avec choice={choice}")
@@ -87,7 +107,7 @@ def process_input(choice, text_input, file_path, url_input, rss_input):
         content = fetch_article_from_url(url_input)
 
     elif choice == "rss":
-        articles = fetch_articles_from_rss(rss_input)
+        articles = fetch_articles_from_rss(rss_input, level=summary_level)
         summary = "\n\n".join([f"📰 {a['title']}:\n{a['summary']}" for a in articles])
         content = "\n\n".join([a['content'] for a in articles])
 
@@ -96,7 +116,8 @@ def process_input(choice, text_input, file_path, url_input, rss_input):
         return "", None, None, None
 
     if choice != "rss":
-        summary = summarize_text(content)
+        summary = summarize_text(content, level=summary_level)
+
 
     print("Résumé généré :", summary)
 
@@ -116,7 +137,7 @@ def process_input(choice, text_input, file_path, url_input, rss_input):
         retriever=vectorstore.as_retriever(search_kwargs={"k": 2}),
         chain_type="stuff",
         chain_type_kwargs={"prompt": prompt_template},
-        return_source_documents=True
+        return_source_documents=True 
     )
 
     audio = text_to_speech(summary)

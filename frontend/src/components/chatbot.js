@@ -6,7 +6,8 @@ function Chatbot() {
   const [userInput, setUserInput] = useState("");
 
   const handleSend = async () => {
-    const res = await axios.post("http://localhost:5000/chat", { message: userInput });
+    const res = await axios.post("http://localhost:5000/chat", { question: userInput });
+
     setMessages([...messages, { user: userInput, bot: res.data.answer }]);
     setUserInput("");
   };
