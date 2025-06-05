@@ -19,14 +19,11 @@ def process():
         file_name = data.get("file_name")
         summary_level = data.get("summary_level", "medium")
 
-
         file_path = None
         if choice == "file" and file_data and file_name:
-            # Décoder le base64
             header, encoded = file_data.split(",", 1)
             file_bytes = base64.b64decode(encoded)
 
-            # Sauvegarder temporairement le fichier
             temp_dir = "temp_uploads"
             os.makedirs(temp_dir, exist_ok=True)
             file_path = os.path.join(temp_dir, file_name)
@@ -40,7 +37,6 @@ def process():
             url_input=url_input,
             rss_input=rss_input,
             summary_level=summary_level
-
         )
 
         if file_path and os.path.exists(file_path):
@@ -48,20 +44,19 @@ def process():
 
         response = {
             "status": "success",
-            "summary": summary,
+            "summary": summary if choice != "rss" else None,
+            "articles": summary if choice == "rss" else None,
             "audio_file": audio_path
-        }
+            }
 
-        return jsonify(response)  
+        return jsonify(response)
 
     except Exception as e:
         print(f"Erreur dans /process : {e}")
         return jsonify({"error": str(e), "status": "error"}), 500
 
-
 from flask import request, jsonify
-from app import utils  # importer utils pour accéder à rag_chain
-
+from app import utils  
 @routes.route("/chat", methods=["POST"])
 def chat():
     question = request.json.get("question")

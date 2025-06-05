@@ -42,9 +42,9 @@ function InputForm({ setSummary, setAudioUrl, setChatEnabled, setArticles }) {
 
       if (response.ok && data.status === "success") {
         if (data.articles) {
-          setArticles(data.articles); // RSS : liste d'articles
+          setArticles(data.articles);
         } else if (data.summary) {
-          setArticles([{ title: "Résumé", summary: data.summary }]); // Texte / URL / Fichier
+          setArticles([{ title: "Résumé", summary: data.summary }]);
         }
 
         if (data.audio_file) {
@@ -71,98 +71,98 @@ function InputForm({ setSummary, setAudioUrl, setChatEnabled, setArticles }) {
 
   return (
     <form onSubmit={handleSubmit}>
-      <div>
-        <label>
-          <input
-            type="radio"
-            name="inputType"
-            value="text"
-            checked={selectedOption === "text"}
-            onChange={(e) => setSelectedOption(e.target.value)}
-          />
-          Texte
-        </label>
-        <label>
-          <input
-            type="radio"
-            name="inputType"
-            value="url"
-            checked={selectedOption === "url"}
-            onChange={(e) => setSelectedOption(e.target.value)}
-          />
-          URL
-        </label>
-        <label>
-          <input
-            type="radio"
-            name="inputType"
-            value="file"
-            checked={selectedOption === "file"}
-            onChange={(e) => setSelectedOption(e.target.value)}
-          />
-          Fichier
-        </label>
-        <label>
-          <input
-            type="radio"
-            name="inputType"
-            value="rss"
-            checked={selectedOption === "rss"}
-            onChange={(e) => setSelectedOption(e.target.value)}
-          />
-          Flux RSS
-        </label>
+      <div className="mb-3">
+        <label className="form-label">Type d'entrée :</label>
+        <div className="d-flex flex-wrap gap-3">
+          {["text", "url", "file", "rss"].map((type) => (
+            <div className="form-check form-check-inline" key={type}>
+              <input
+                className="form-check-input"
+                type="radio"
+                name="inputType"
+                id={`input-${type}`}
+                value={type}
+                checked={selectedOption === type}
+                onChange={(e) => setSelectedOption(e.target.value)}
+              />
+              <label className="form-check-label" htmlFor={`input-${type}`}>
+                {type.toUpperCase()}
+              </label>
+            </div>
+          ))}
+        </div>
       </div>
 
       {selectedOption === "text" && (
-        <textarea
-          value={textInput}
-          onChange={(e) => setTextInput(e.target.value)}
-          rows="6"
-          cols="60"
-          placeholder="Collez votre texte ici..."
-          required
-        />
+        <div className="mb-3">
+          <label className="form-label">Texte à résumer</label>
+          <textarea
+            className="form-control"
+            rows="5"
+            value={textInput}
+            onChange={(e) => setTextInput(e.target.value)}
+            placeholder="Collez votre texte ici..."
+            required
+          />
+        </div>
       )}
 
       {selectedOption === "url" && (
-        <input
-          type="url"
-          value={urlInput}
-          onChange={(e) => setUrlInput(e.target.value)}
-          placeholder="Entrez une URL"
-          required
-        />
+        <div className="mb-3">
+          <label className="form-label">URL</label>
+          <input
+            type="url"
+            className="form-control"
+            value={urlInput}
+            onChange={(e) => setUrlInput(e.target.value)}
+            placeholder="Entrez une URL"
+            required
+          />
+        </div>
       )}
 
       {selectedOption === "file" && (
-        <input
-          type="file"
-          onChange={(e) => setFileInput(e.target.files[0])}
-          required
-        />
+        <div className="mb-3">
+          <label className="form-label">Fichier</label>
+          <input
+            type="file"
+            className="form-control"
+            onChange={(e) => setFileInput(e.target.files[0])}
+            required
+          />
+        </div>
       )}
 
       {selectedOption === "rss" && (
-        <input
-          type="url"
-          value={rssInput}
-          onChange={(e) => setRssInput(e.target.value)}
-          placeholder="Entrez l'URL du flux RSS"
-          required
-        />
+        <div className="mb-3">
+          <label className="form-label">Flux RSS</label>
+          <input
+            type="url"
+            className="form-control"
+            value={rssInput}
+            onChange={(e) => setRssInput(e.target.value)}
+            placeholder="Entrez l'URL du flux RSS"
+            required
+          />
+        </div>
       )}
-       <div>
-        <label>Niveau de résumé : </label>
-        <select value={summaryLevel} onChange={(e) => setSummaryLevel(e.target.value)}>
+
+      <div className="mb-3">
+        <label className="form-label">Niveau de résumé</label>
+        <select
+          className="form-select"
+          value={summaryLevel}
+          onChange={(e) => setSummaryLevel(e.target.value)}
+        >
           <option value="short">Court</option>
           <option value="medium">Moyen</option>
           <option value="long">Long</option>
         </select>
       </div>
 
-      <br />
-      <button type="submit">Envoyer</button>
+      <button type="submit" className="btn btn-primary w-100">
+        📤 Envoyer
+      </button>
     </form>
   );
 }

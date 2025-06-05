@@ -6,6 +6,7 @@ function Chatbot() {
   const [userInput, setUserInput] = useState("");
 
   const handleSend = async () => {
+    if (!userInput.trim()) return;
     const res = await axios.post("http://localhost:5000/chat", { question: userInput });
 
     setMessages([...messages, { user: userInput, bot: res.data.answer }]);
@@ -14,18 +15,34 @@ function Chatbot() {
 
   return (
     <div>
-      <h2>Posez vos questions</h2>
-      <div style={{ marginBottom: 10 }}>
+      <h4 className="mb-3">🤖 Posez vos questions</h4>
+      <div className="mb-3" style={{ maxHeight: 300, overflowY: "auto" }}>
         {messages.map((m, i) => (
-          <div key={i}>
-            <b>Vous:</b> {m.user} <br />
-            <b>Bot:</b> {m.bot}
-            <hr />
+          <div key={i} className="mb-3">
+            <div className="text-end">
+              <span className="badge bg-primary">Vous</span>
+              <div className="alert alert-primary d-inline-block">{m.user}</div>
+            </div>
+            <div>
+              <span className="badge bg-secondary">Bot</span>
+              <div className="alert alert-secondary d-inline-block">{m.bot}</div>
+            </div>
           </div>
         ))}
       </div>
-      <input value={userInput} onChange={(e) => setUserInput(e.target.value)} />
-      <button onClick={handleSend}>Envoyer</button>
+
+      <div className="d-flex">
+        <input
+          type="text"
+          className="form-control me-2"
+          value={userInput}
+          placeholder="Posez une question..."
+          onChange={(e) => setUserInput(e.target.value)}
+        />
+        <button className="btn btn-primary" onClick={handleSend}>
+          Envoyer
+        </button>
+      </div>
     </div>
   );
 }

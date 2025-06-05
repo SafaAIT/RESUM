@@ -1,4 +1,3 @@
-
 import re
 import os
 from bs4 import BeautifulSoup
@@ -95,12 +94,14 @@ def process_input(choice, text_input, file_path, url_input, rss_input, summary_l
 
     print(f"process_input appelé avec choice={choice}")
 
-    articles = None  # Valeur par défaut
+    articles = None
+    content = ""
+    summary = ""
 
     if choice == "text":
         content = text_input
 
-    elif choice == "pdf" or choice == "file":
+    elif choice in ["pdf", "file"]:
         content = load_pdf(file_path)
 
     elif choice == "url":
@@ -108,23 +109,26 @@ def process_input(choice, text_input, file_path, url_input, rss_input, summary_l
 
     elif choice == "rss":
         articles = fetch_articles_from_rss(rss_input, level=summary_level)
-        summary = "\n\n".join([f"📰 {a['title']}:\n{a['summary']}" for a in articles])
+        print("Articles RSS résumés :", articles)
         content = "\n\n".join([a['content'] for a in articles])
-
+        # Texte pour l'audio : résumés concaténés avec titres
+        audio_summary_text = "\n\n".join([f"{a['title']}: {a['summary']}" for a in articles])
+        summary = articles  # Le résumé retourné est la liste des articles
     else:
         print("Choice invalide")
         return "", None, None, None
 
     if choice != "rss":
         summary = summarize_text(content, level=summary_level)
+        audio_summary_text = summary
 
-
-    print("Résumé généré :", summary)
-
+    # Création des chunks pour RAG
     splitter = RecursiveCharacterTextSplitter(chunk_size=500, chunk_overlap=50)
     chunks = splitter.create_documents([content])
 
-    embeddings = HuggingFaceEmbeddings(model_name="BAAI/bge-base-en-v1.5", model_kwargs={"device": "cpu"})  # J'ai mis cpu ici pour éviter problème CUDA
+    embeddings = HuggingFaceEmbeddings(
+        model_name="BAAI/bge-base-en-v1.5", model_kwargs={"device": "cpu"}
+    )
     vectorstore = FAISS.from_documents(chunks, embeddings)
 
     prompt_template = PromptTemplate(
@@ -137,10 +141,10 @@ def process_input(choice, text_input, file_path, url_input, rss_input, summary_l
         retriever=vectorstore.as_retriever(search_kwargs={"k": 2}),
         chain_type="stuff",
         chain_type_kwargs={"prompt": prompt_template},
-        return_source_documents=True 
+        return_source_documents=True
     )
 
-    audio = text_to_speech(summary)
+    audio = text_to_speech(audio_summary_text)
     print("Audio généré à :", audio)
 
     return summary, rag_chain, content, audio

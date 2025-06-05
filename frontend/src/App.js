@@ -3,6 +3,7 @@ import InputForm from "./components/inputForm";
 import SummarySection from "./components/summary";
 import AudioPlayer from "./components/audioPlayer";
 import Chatbot from "./components/chatbot";
+
 import 'bootstrap/dist/css/bootstrap.min.css';
 
 function App() {
@@ -11,16 +12,31 @@ function App() {
   const [chatEnabled, setChatEnabled] = useState(false);
 
   return (
-    <div className="App" style={{ padding: 20 }}>
-      <h1>Veille</h1>
-      <InputForm
-        setAudioUrl={setAudioUrl}
-        setChatEnabled={setChatEnabled}
-        setArticles={setArticles}
-      />
-      <SummarySection articles={articles} />
-      <AudioPlayer audioUrl={audioUrl} />
-      {chatEnabled && <Chatbot />}
+    <div className="bg-light min-vh-100 py-4">
+      <div className="container">
+        <div className="text-center mb-4">
+          <h1 className="display-5 fw-bold text-primary">📰 Veille Intelligente</h1>
+          <p className="text-muted">Résumé automatique, audio & Q&A</p>
+        </div>
+
+        <div className="card p-4 mb-4 shadow-sm">
+          <InputForm
+            setAudioUrl={setAudioUrl}
+            setChatEnabled={setChatEnabled}
+            setArticles={setArticles}
+          />
+        </div>
+
+        <SummarySection articles={articles} />
+
+        <AudioPlayer audioUrl={audioUrl} />
+
+        {chatEnabled && (
+          <div className="card p-4 mt-4 shadow-sm">
+            <Chatbot />
+          </div>
+        )}
+      </div>
     </div>
   );
 }
